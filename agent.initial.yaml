@@ -1,0 +1,26 @@
+agents:
+  agent:
+    type: "root-agent"
+    name: "helpful_assistant"
+    model: "gemini-2.5-flash-lite"
+    description: "A simple agent that can answer general questions."
+    instruction: "You are a helpful assistant. Use Google Search for current info or if unsure."
+    api-key: ${GOOGLE_API_KEY}
+    arguments: ${ROOT_AGENT_ARGUMENTS}
+    tools:
+      - GoogleSearch
+    memory:
+      - root-agent-memory
+
+
+  # test-agent`:
+  #   type: "root-agent"
+  #   name: "helpful_assistant"
+  #   model: "gemini-2.5-flash-lite"
+  #   description: "A simple agent that can answer general questions."
+  #   instruction: "You are a helpful assistant. Use Google Search for current info or if unsure."
+  #   memory:
+  #     - root-agent-memory
+
+memory:
+  root-agent-memory: InMemoryRunner
