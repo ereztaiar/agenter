@@ -1,13 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"github.com/ereztaiar/agenter/pkg/agents"
+	"github.com/ereztaiar/agenter/pkg/commands"
+)
+
+var (
+	rootConfig *agent.RootConfig
 )
 
 func main() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	commands.Start(rootConfig)
 }

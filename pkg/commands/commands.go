@@ -1,7 +1,7 @@
-package main
+package commands
 
 import (
-	"fmt"
+	"github.com/ereztaiar/agenter/pkg/agents"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -9,12 +9,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"agenter/pkg/agent"
 )
 
 var (
 	agentFile  string
-	rootConfig *RootConfig
+	rootConfig *agent.RootConfig
 )
 
 func init() {
@@ -22,13 +21,13 @@ func init() {
 		log.Fatal("Error loading .env file")
 	}
 
-	rootCmd.PersistentFlags().StringVar(&agentFile, "file", "", "agent file (default is ./agent.yaml)")
+	RootCmd.PersistentFlags().StringVar(&agentFile, "file", "", "agent file (default is ./agent.yaml)")
 
-	rootCmd.AddCommand(listCmd)
+	RootCmd.AddCommand(listCmd)
 	viper.SetDefault("file", filepath.Join(os.Getenv("PWD"), "agent.yaml"))
 }
 
-var rootCmd = &cobra.Command{
+var RootCmd = &cobra.Command{
 	Use:               "agenter",
 	Short:             "An AI agent orchestrator",
 	Long:              `agenter lets you run agents localy and quickly.`,
@@ -48,27 +47,22 @@ func loadAgents(cmd *cobra.Command, args []string) {
 
 	file := getAgentsFile()
 
+	log.Println("Loading file", file)
+
 	data, err := os.ReadFile(file)
 
 	replaced := os.ExpandEnv(string(data))
 
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	err = yaml.Unmarshal([]byte(replaced), &rootConfig)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
 
-	for _, ac := range rootConfig.AgentsConfig {
-		if ac.Type == "root-agent" {
-			continue
-		}
-		// fmt.Println(key)
-		ac.GenerateAgent()
+	err = yaml.Unmarshal([]byte(replaced), &rootConfig)
+	if err != nil {
+		log.Fatalln(err)
 	}
+
+	rootConfig.BuildAgents()
 
 }
 
@@ -89,4 +83,12 @@ func rootTask(cmd *cobra.Command, args []string) {
 
 func listAgents(cmd *cobra.Command, args []string) {
 	// fmt.Println("running agents list")
+}
+
+func Start(rc *agent.RootConfig) {
+	rootConfig = rc
+	if err := RootCmd.Execute(); err != nil {
+		log.Fatalln(err)
+
+	}
 }

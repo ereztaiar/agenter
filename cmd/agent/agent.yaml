@@ -32,7 +32,6 @@ agents:
     type: "root-agent"
     name: "ResearchCoordinator"
     model: "gemini-2.5-flash-lite"
-    arguments: ${ROOT_AGENT_ARGUMENTS}
     description: "A simple agent that summerize research_agent reasearch."
     instruction: >
 
@@ -46,5 +45,6 @@ agents:
       agents:
         - research_agent
         - summarizer_agent
+
 # memory:
 #   root-agent-memory: InMemoryRunner
