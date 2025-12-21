@@ -26,8 +26,7 @@ func (rc *RootConfig) BuildAgents() {
 
 func (rc *RootConfig) buildToolAgents() {
 	for _, ac := range rc.Filter("tool-agent") {
-		_ = ac
-		// ac.GenerateAgent()
+		ac.GenerateAgent()
 	}
 }
 
@@ -124,15 +123,31 @@ func (ac *AgentConfig) GenerateAgent() {
 		outputKey = *ac.OutputKey
 	}
 
+	tools := []tool.Tool{}
+
+
+	if ac.Tools.Function != nil {
+		for _, functionTool := range ac.Tools.Function {
+			var t tool.Tool
+			switch functionTool {
+			case "":
+				t = geminitool.GoogleSearch{}
+			default:
+				continue
+			}
+
+			tools = append(tools, t)
+
+		}
+	}
+
 	currentAgent, err := llmagent.New(llmagent.Config{
 		Name:        ac.Name,
 		Model:       model,
 		Description: ac.Description,
 		Instruction: ac.Instruction,
 		OutputKey:   outputKey,
-		Tools: []tool.Tool{
-			geminitool.GoogleSearch{},
-		},
+		Tools:       tools,
 	})
 	if err != nil {
 		log.Fatalf("Failed to create agent: %v", err)
