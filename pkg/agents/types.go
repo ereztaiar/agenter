@@ -14,6 +14,7 @@ type AgentConfig struct {
 	DependsOn   string   `yaml:"depends_on,omitempty"`
 	Name        string   `yaml:"name"`
 	Model       string   `yaml:"model"`
+	Workflow    string   `yaml:"workflow,omitempty"`
 	Description string   `yaml:"description"`
 	Instruction string   `yaml:"instruction"`
 	ApiKey      string   `yaml:"api-key"`

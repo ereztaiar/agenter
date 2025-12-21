@@ -13,6 +13,7 @@ import (
 	"google.golang.org/adk/model/gemini"
 	"google.golang.org/adk/tool"
 
+	"google.golang.org/adk/agent/workflowagents/sequentialagent"
 	"google.golang.org/adk/tool/agenttool"
 	"google.golang.org/adk/tool/geminitool"
 	"google.golang.org/genai"
@@ -20,7 +21,7 @@ import (
 )
 
 func (rc *RootConfig) BuildAgents() {
-	rc.buildToolAgents()
+	// rc.buildToolAgents()
 	rc.buildRootAgents()
 }
 
@@ -74,20 +75,42 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig) {
 		log.Fatalf("Failed to create model: %v", err)
 	}
 
-	tools := []tool.Tool{}
+	var currentAgent agent.Agent
 
-	for _, t := range ad {
-		tool := agenttool.New(*t.agent, nil)
-		tools = append(tools, tool)
+	switch ac.Workflow {
+	case "sequential":
+		log.Println("building sequential agent")
+		agents := []agent.Agent{}
+
+		for _, t := range ad {
+
+			agents = append(agents, *t.agent)
+		}
+
+		currentAgent, err = sequentialagent.New(sequentialagent.Config{
+			AgentConfig: agent.Config{
+				Name:        ac.Name,
+				Description: ac.Description,
+				SubAgents:   agents,
+			},
+		})
+	case "Parallel":
+	default:
+		tools := []tool.Tool{}
+
+		for _, t := range ad {
+			tool := agenttool.New(*t.agent, nil)
+			tools = append(tools, tool)
+		}
+		currentAgent, err = llmagent.New(llmagent.Config{
+			Name:        ac.Name,
+			Model:       model,
+			Description: ac.Description,
+			Instruction: ac.Instruction,
+			Tools:       tools,
+		})
 	}
 
-	currentAgent, err := llmagent.New(llmagent.Config{
-		Name:        ac.Name,
-		Model:       model,
-		Description: ac.Description,
-		Instruction: ac.Instruction,
-		Tools:       tools,
-	})
 	if err != nil {
 		log.Fatalf("Failed to create agent: %v", err)
 	}
@@ -124,7 +147,6 @@ func (ac *AgentConfig) GenerateAgent() {
 	}
 
 	tools := []tool.Tool{}
-
 
 	if ac.Tools.Function != nil {
 		for _, functionTool := range ac.Tools.Function {
