@@ -20,6 +20,17 @@ import (
 	// "google.golang.org/adk/memory"
 )
 
+// var patterns = map[string]func(query string) string{
+// 	"parallel":   func(query string) string { return "searched " + query },
+// 	"sequential": func(query string) string { return "helped " + query },
+// 	"loop":       func(query string) string { return "helped " + query },
+// }
+
+// if cmdFunc, exists := commands[command]; exists {
+//     result := cmdFunc(query)
+//     // ...
+// }
+
 func (rc *RootConfig) BuildAgents() {
 	// rc.buildToolAgents()
 	rc.buildRootAgents()
@@ -94,7 +105,7 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig) {
 				SubAgents:   agents,
 			},
 		})
-	case "Parallel":
+	case "parallel":
 	default:
 		tools := []tool.Tool{}
 
@@ -117,17 +128,22 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig) {
 
 	ac.agent = &currentAgent
 
+	ac.launcher(ctx)
+
+}
+
+func (ac *AgentConfig) launcher(ctx context.Context) {
+
 	config := &launcher.Config{
-		AgentLoader: agent.NewSingleLoader(currentAgent),
+		AgentLoader: agent.NewSingleLoader(*ac.agent),
 	}
 
 	args := strings.Split(ac.Arguments, " ")
 
 	l := full.NewLauncher()
-	if err = l.Execute(ctx, config, args); err != nil {
+	if err := l.Execute(ctx, config, args); err != nil {
 		log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
 	}
-
 }
 
 func (ac *AgentConfig) GenerateAgent() {
