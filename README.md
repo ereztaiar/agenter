@@ -349,11 +349,13 @@ arguments: "--web --port 8080"
 
 ## License
 
-[Add your license here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+By contributing to this project, you agree to the terms outlined in our [Contributor License Agreement (CLA)](CLA.md). Simply submitting a pull request constitutes your acceptance of the CLA terms.
 
 ## Support
 
