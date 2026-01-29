@@ -10,12 +10,6 @@ func (rc *RootConfig) BuildAgents() {
 	rc.buildRootAgents()
 }
 
-// func (rc *RootConfig) buildToolAgents() {
-// 	for _, ac := range rc.Filter("tool-agent") {
-// 		ac.GenerateAgent()
-// 	}
-// }
-
 func (rc *RootConfig) buildRootAgents() {
 	for _, ac := range rc.Filter("root-agent") {
 

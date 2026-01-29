@@ -2,20 +2,15 @@ package agent
 
 import (
 	"context"
-	"google.golang.org/adk/agent"
+	"log"
 	"strings"
 
-	"log"
-
+	"google.golang.org/adk/agent"
 	"google.golang.org/adk/agent/llmagent"
+	"google.golang.org/adk/agent/workflowagents/sequentialagent"
 	"google.golang.org/adk/cmd/launcher"
 	"google.golang.org/adk/cmd/launcher/full"
 	"google.golang.org/adk/model/gemini"
-	"google.golang.org/adk/tool"
-
-	"google.golang.org/adk/agent/workflowagents/sequentialagent"
-	"google.golang.org/adk/tool/agenttool"
-	"google.golang.org/adk/tool/geminitool"
 	"google.golang.org/genai"
 )
 
@@ -72,12 +67,7 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig) {
 		})
 	case "parallel":
 	default:
-		tools := []tool.Tool{}
-
-		for _, t := range ad {
-			tool := agenttool.New(*t.agent, nil)
-			tools = append(tools, tool)
-		}
+		tools := ac.Tools.GenerateAgentTools(ad)
 		currentAgent, err = llmagent.New(llmagent.Config{
 			Name:        string(ac.Name),
 			Model:       model,
@@ -93,11 +83,17 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig) {
 
 	ac.agent = &currentAgent
 
-	ac.launcher(ctx)
+	// If arguments are provided, use full launcher. Otherwise, use in-memory runner
+	if ac.Arguments != "" {
+		ac.webLauncher(ctx)
+	} else {
+		ac.inlineLauncher(ctx)
+
+	}
 
 }
 
-func (ac *AgentConfig) launcher(ctx context.Context) {
+func (ac *AgentConfig) webLauncher(ctx context.Context) {
 
 	config := &launcher.Config{
 		AgentLoader: agent.NewSingleLoader(*ac.agent),
@@ -109,6 +105,19 @@ func (ac *AgentConfig) launcher(ctx context.Context) {
 	if err := l.Execute(ctx, config, args); err != nil {
 		log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
 	}
+}
+
+func (ac *AgentConfig) inlineLauncher(ctx context.Context) {
+	log.Println("Starting in-memory command-line runner for agent:", ac.Name)
+	config := &launcher.Config{
+		AgentLoader: agent.NewSingleLoader(*ac.agent),
+	}
+
+	l := full.NewLauncher()
+	if err := l.Execute(ctx, config, make([]string, 0)); err != nil {
+		log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
+	}
+
 }
 
 func (ac *AgentConfig) GenerateAgent() {
@@ -127,22 +136,7 @@ func (ac *AgentConfig) GenerateAgent() {
 		outputKey = *ac.OutputKey
 	}
 
-	tools := []tool.Tool{}
-
-	if ac.Tools.Functions != nil {
-		for _, functionTool := range ac.Tools.Functions {
-			var t tool.Tool
-			switch functionTool {
-			case "":
-				t = geminitool.GoogleSearch{}
-			default:
-				continue
-			}
-
-			tools = append(tools, t)
-
-		}
-	}
+	tools := ac.Tools.GenerateFunctionTools()
 
 	currentAgent, err := llmagent.New(llmagent.Config{
 		Name:        string(ac.Name),
