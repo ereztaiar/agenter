@@ -54,12 +54,13 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig, agentsConfig map[stri
 		log.Println("building sequential agent")
 		agents := []agent.Agent{}
 
-		for _, t := range ad {
-			if t.agent == nil {
-				t.GenerateAgent(agentsConfig)
+		for agentName := range ac.SubAgents {
+			agentConfig := agentsConfig[agentName]
+			if agentConfig.agent == nil {
+				agentConfig.GenerateAgent(agentsConfig)
 			}
-			if t.agent != nil {
-				agents = append(agents, *t.agent)
+			if agentConfig.agent != nil {
+				agents = append(agents, *agentConfig.agent)
 			}
 		}
 
@@ -71,25 +72,6 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig, agentsConfig map[stri
 			},
 		})
 	case "parallel":
-		log.Println("building parallel agent")
-		agents := []agent.Agent{}
-
-		for _, t := range ad {
-			if t.agent == nil {
-				t.GenerateAgent(agentsConfig)
-			}
-			if t.agent != nil {
-				agents = append(agents, *t.agent)
-			}
-		}
-
-		currentAgent, err = parallelagent.New(parallelagent.Config{
-			AgentConfig: agent.Config{
-				Name:        string(ac.Name),
-				Description: string(ac.Description),
-				SubAgents:   agents,
-			},
-		})
 	default:
 		tools := ac.Tools.GenerateAgentTools(ad)
 		currentAgent, err = llmagent.New(llmagent.Config{

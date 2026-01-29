@@ -3,14 +3,14 @@ agents:
     type: "agent"
     name: "TechResearcher"
     model: "gemini-2.5-flash-lite"
-    description: "Focuses on AI and ML trends."
+    description: "Writes the full blog post based on the outline from the previous agent."
     instruction: >
 
-      Research the latest AI/ML trends. Include 3 key developments,
-      the main companies involved, and the potential impact. Keep the report very concise (100 words).
+      Following this outline strictly: {blog_outline}
+      Write a brief, 200 to 300-word blog post with an engaging and informative tone
 
     api-key: ${GOOGLE_API_KEY}
-    output_key: "tech_research"
+    output_key: "blog_draft"
 
   health_researcher:
     type: "agent"
