@@ -78,8 +78,8 @@ agents:
 				"TEST_API_KEY": "secret-key-123",
 			},
 			check: func(t *testing.T, config agent.RootConfig) {
-				agent := config.AgentsConfig["test_agent"]
-				assert.Equal(t, agent.ApiKey("secret-key-123"), agent.ApiKey)
+				agentConfig := config.AgentsConfig["test_agent"]
+				assert.Equal(t, agent.ApiKey("secret-key-123"), agentConfig.ApiKey)
 			},
 		},
 		{
@@ -101,10 +101,10 @@ agents:
 				"TEST_ARGS":    "web -port 8080",
 			},
 			check: func(t *testing.T, config agent.RootConfig) {
-				agent := config.AgentsConfig["test_agent"]
-				assert.Equal(t, agent.ApiKey("secret-key-123"), agent.ApiKey)
-				assert.Equal(t, agent.Model("gemini-2.5-flash-lite"), agent.Model)
-				assert.Equal(t, agent.Arguments("web -port 8080"), agent.Arguments)
+				agentConfig := config.AgentsConfig["test_agent"]
+				assert.Equal(t, agent.ApiKey("secret-key-123"), agentConfig.ApiKey)
+				assert.Equal(t, agent.Model("gemini-2.5-flash-lite"), agentConfig.Model)
+				assert.Equal(t, agent.Arguments("web -port 8080"), agentConfig.Arguments)
 			},
 		},
 		{
@@ -121,8 +121,8 @@ agents:
 `,
 			envVars: map[string]string{},
 			check: func(t *testing.T, config agent.RootConfig) {
-				agent := config.AgentsConfig["test_agent"]
-				assert.Equal(t, agent.ApiKey(""), agent.ApiKey)
+				agentConfig := config.AgentsConfig["test_agent"]
+				assert.Equal(t, agent.ApiKey(""), agentConfig.ApiKey)
 			},
 		},
 	}

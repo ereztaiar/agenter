@@ -21,13 +21,13 @@ func (rc *RootConfig) buildRootAgents() {
 
 			agentConfig := rc.AgentsConfig[agentTool]
 			if agentConfig.agent == nil {
-				agentConfig.GenerateAgent()
+				agentConfig.GenerateAgent(rc.AgentsConfig)
 			}
 			toolAgentsForRoot = append(toolAgentsForRoot, agentConfig)
 
 		}
 
-		ac.GenerateRootAgent(toolAgentsForRoot)
+		ac.GenerateRootAgent(toolAgentsForRoot, rc.AgentsConfig)
 	}
 }
 

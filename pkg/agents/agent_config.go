@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/adk/agent"
 	"google.golang.org/adk/agent/llmagent"
+	"google.golang.org/adk/agent/workflowagents/parallelagent"
 	"google.golang.org/adk/agent/workflowagents/sequentialagent"
 	"google.golang.org/adk/cmd/launcher"
 	"google.golang.org/adk/cmd/launcher/full"
@@ -31,7 +32,7 @@ type AgentConfig struct {
 	agent       *agent.Agent
 }
 
-func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig) {
+func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig, agentsConfig map[string]AgentConfig) {
 	if ac.Type != "root-agent" {
 		log.Fatalln("Wrong agent type")
 
@@ -54,8 +55,12 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig) {
 		agents := []agent.Agent{}
 
 		for _, t := range ad {
-
-			agents = append(agents, *t.agent)
+			if t.agent == nil {
+				t.GenerateAgent(agentsConfig)
+			}
+			if t.agent != nil {
+				agents = append(agents, *t.agent)
+			}
 		}
 
 		currentAgent, err = sequentialagent.New(sequentialagent.Config{
@@ -66,6 +71,25 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig) {
 			},
 		})
 	case "parallel":
+		log.Println("building parallel agent")
+		agents := []agent.Agent{}
+
+		for _, t := range ad {
+			if t.agent == nil {
+				t.GenerateAgent(agentsConfig)
+			}
+			if t.agent != nil {
+				agents = append(agents, *t.agent)
+			}
+		}
+
+		currentAgent, err = parallelagent.New(parallelagent.Config{
+			AgentConfig: agent.Config{
+				Name:        string(ac.Name),
+				Description: string(ac.Description),
+				SubAgents:   agents,
+			},
+		})
 	default:
 		tools := ac.Tools.GenerateAgentTools(ad)
 		currentAgent, err = llmagent.New(llmagent.Config{
@@ -83,7 +107,7 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig) {
 
 	ac.agent = &currentAgent
 
-	// If arguments are provided, use full launcher. Otherwise, use in-memory runner
+	// If arguments are provided, use full launcher. Otherwise, use cli
 	if ac.Arguments != "" {
 		ac.webLauncher(ctx)
 	} else {
@@ -120,7 +144,7 @@ func (ac *AgentConfig) inlineLauncher(ctx context.Context) {
 
 }
 
-func (ac *AgentConfig) GenerateAgent() {
+func (ac *AgentConfig) GenerateAgent(agentsConfig map[string]AgentConfig) {
 	ctx := context.Background()
 
 	model, err := gemini.NewModel(ctx, string(ac.Model), &genai.ClientConfig{
@@ -136,16 +160,64 @@ func (ac *AgentConfig) GenerateAgent() {
 		outputKey = *ac.OutputKey
 	}
 
-	tools := ac.Tools.GenerateFunctionTools()
+	var currentAgent agent.Agent
 
-	currentAgent, err := llmagent.New(llmagent.Config{
-		Name:        string(ac.Name),
-		Model:       model,
-		Description: string(ac.Description),
-		Instruction: string(ac.Instruction),
-		OutputKey:   outputKey,
-		Tools:       tools,
-	})
+	switch ac.Workflow {
+	case "sequential":
+		log.Println("building sequential agent")
+		agents := []agent.Agent{}
+
+		for agentName := range ac.SubAgents {
+			agentConfig := agentsConfig[agentName]
+			if agentConfig.agent == nil {
+				agentConfig.GenerateAgent(agentsConfig)
+			}
+			if agentConfig.agent != nil {
+				agents = append(agents, *agentConfig.agent)
+			}
+		}
+
+		currentAgent, err = sequentialagent.New(sequentialagent.Config{
+			AgentConfig: agent.Config{
+				Name:        string(ac.Name),
+				Description: string(ac.Description),
+				SubAgents:   agents,
+			},
+		})
+	case "parallel":
+		log.Println("building parallel agent")
+		agents := []agent.Agent{}
+
+		for agentName := range ac.SubAgents {
+			agentConfig := agentsConfig[agentName]
+			if agentConfig.agent == nil {
+				agentConfig.GenerateAgent(agentsConfig)
+			}
+			if agentConfig.agent != nil {
+				agents = append(agents, *agentConfig.agent)
+			}
+		}
+
+		currentAgent, err = parallelagent.New(parallelagent.Config{
+			AgentConfig: agent.Config{
+				Name:        string(ac.Name),
+				Description: string(ac.Description),
+				SubAgents:   agents,
+			},
+		})
+	default:
+		tools := ac.Tools.GenerateFunctionTools()
+
+		currentAgent, err = llmagent.New(llmagent.Config{
+			Name:        string(ac.Name),
+			Model:       model,
+			Description: string(ac.Description),
+			Instruction: string(ac.Instruction),
+			OutputKey:   outputKey,
+			Tools:       tools,
+		})
+	}
+
 	if err != nil {
 		log.Fatalf("Failed to create agent: %v", err)
 	}
