@@ -18,7 +18,7 @@ var (
 
 func init() {
 	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file")
 	}
 
 	RootCmd.PersistentFlags().StringVar(&agentFile, "file", "", "agent file (default is ./agent.yaml)")

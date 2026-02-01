@@ -12,7 +12,36 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// setupTestEnv sets up mock environment variables for testing
+func setupTestEnv(t *testing.T) {
+	t.Helper()
+
+	// Set mock API key for tests
+	os.Setenv("GOOGLE_API_KEY", "test-google-api-key-12345")
+	t.Cleanup(func() {
+		os.Unsetenv("GOOGLE_API_KEY")
+	})
+
+	// Set mock root agent arguments
+	os.Setenv("ROOT_AGENT_ARGUMENTS", "web -port 8080")
+	t.Cleanup(func() {
+		os.Unsetenv("ROOT_AGENT_ARGUMENTS")
+	})
+
+	// Set mock PWD for consistent path testing
+	if os.Getenv("PWD") == "" {
+		pwd, err := os.Getwd()
+		require.NoError(t, err)
+		os.Setenv("PWD", pwd)
+		t.Cleanup(func() {
+			os.Unsetenv("PWD")
+		})
+	}
+}
+
 func TestGetAgentsFile(t *testing.T) {
+	setupTestEnv(t)
+
 	tests := []struct {
 		name           string
 		setupAgentFile func()
@@ -148,6 +177,8 @@ agents:
 }
 
 func TestRootCmd_Structure(t *testing.T) {
+	setupTestEnv(t)
+
 	assert.NotNil(t, RootCmd)
 	assert.Equal(t, "agenter", RootCmd.Use)
 	assert.Equal(t, "An AI agent orchestrator", RootCmd.Short)
@@ -155,6 +186,8 @@ func TestRootCmd_Structure(t *testing.T) {
 }
 
 func TestListCmd_Structure(t *testing.T) {
+	setupTestEnv(t)
+
 	assert.NotNil(t, listCmd)
 	assert.Equal(t, "list", listCmd.Use)
 	assert.Equal(t, "List all running agents", listCmd.Short)
@@ -162,6 +195,8 @@ func TestListCmd_Structure(t *testing.T) {
 }
 
 func TestRootCmd_HasListSubcommand(t *testing.T) {
+	setupTestEnv(t)
+
 	commands := RootCmd.Commands()
 
 	var foundList bool
@@ -176,6 +211,8 @@ func TestRootCmd_HasListSubcommand(t *testing.T) {
 }
 
 func TestRootCmd_HasFileFlag(t *testing.T) {
+	setupTestEnv(t)
+
 	flag := RootCmd.PersistentFlags().Lookup("file")
 	require.NotNil(t, flag, "RootCmd should have --file flag")
 	assert.Equal(t, "string", flag.Value.Type())
@@ -183,6 +220,8 @@ func TestRootCmd_HasFileFlag(t *testing.T) {
 }
 
 func TestViperDefaultFile(t *testing.T) {
+	setupTestEnv(t)
+
 	viper.Reset()
 
 	viper.SetDefault("file", filepath.Join(os.Getenv("PWD"), "agent.yaml"))
@@ -192,6 +231,8 @@ func TestViperDefaultFile(t *testing.T) {
 }
 
 func TestCompleteYAMLLoadingWorkflow(t *testing.T) {
+	setupTestEnv(t)
+
 	tmpDir := t.TempDir()
 
 	yamlContent := `agents:
@@ -235,6 +276,8 @@ memory:
 }
 
 func TestYAMLWithComplexTools(t *testing.T) {
+	setupTestEnv(t)
+
 	yamlContent := `agents:
   root_agent:
     type: "root-agent"
