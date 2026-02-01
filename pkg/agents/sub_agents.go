@@ -34,6 +34,19 @@ func (s SubAgents) MarshalYAML() (interface{}, error) {
 	return names, nil
 }
 
-func (s *SubAgents) buildSubagents(){
-	
+// BuildAgents generates agent instances for all sub-agents and returns them as a slice
+func (s *SubAgents) BuildAgents(agentsConfig map[string]AgentConfig) []agent.Agent {
+	agents := []agent.Agent{}
+
+	for agentName := range *s {
+		agentConfig := agentsConfig[agentName]
+		if agentConfig.agent == nil {
+			agentConfig.GenerateAgent(agentsConfig, nil)
+		}
+		if agentConfig.agent != nil {
+			agents = append(agents, *agentConfig.agent)
+		}
+	}
+
+	return agents
 }

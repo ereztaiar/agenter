@@ -1,33 +1,36 @@
 package agent
 
+import "context"
+
 type RootConfig struct {
 	AgentsConfig map[string]AgentConfig `yaml:"agents"`
 	MemoryConfig map[string]string      `yaml:"memory"`
 }
 
 func (rc *RootConfig) BuildAgents() {
-	// rc.buildToolAgents()
-	rc.buildRootAgents()
-}
-
-func (rc *RootConfig) buildRootAgents() {
 	for _, ac := range rc.Filter("root-agent") {
 
 		toolAgentsForRoot := []AgentConfig{}
-
-		ac.SubAgents.buildSubagents()
 
 		for _, agentTool := range ac.Tools.Agents {
 
 			agentConfig := rc.AgentsConfig[agentTool]
 			if agentConfig.agent == nil {
-				agentConfig.GenerateAgent(rc.AgentsConfig)
+				agentConfig.GenerateAgent(rc.AgentsConfig, nil)
 			}
 			toolAgentsForRoot = append(toolAgentsForRoot, agentConfig)
 
 		}
 
-		ac.GenerateRootAgent(toolAgentsForRoot, rc.AgentsConfig)
+		ac.GenerateAgent(rc.AgentsConfig, toolAgentsForRoot)
+
+		// Launch the root agent
+		ctx := context.Background()
+		if ac.Arguments != "" {
+			ac.webLauncher(ctx)
+		} else {
+			ac.inlineLauncher(ctx)
+		}
 	}
 }
 

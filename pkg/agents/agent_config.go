@@ -12,6 +12,7 @@ import (
 	"google.golang.org/adk/cmd/launcher"
 	"google.golang.org/adk/cmd/launcher/full"
 	"google.golang.org/adk/model/gemini"
+	"google.golang.org/adk/tool"
 	"google.golang.org/genai"
 )
 
@@ -32,11 +33,7 @@ type AgentConfig struct {
 	agent       *agent.Agent
 }
 
-func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig, agentsConfig map[string]AgentConfig) {
-	if ac.Type != "root-agent" {
-		log.Fatalln("Wrong agent type")
-
-	}
+func (ac *AgentConfig) GenerateAgent(agentsConfig map[string]AgentConfig, toolAgents []AgentConfig) {
 	ctx := context.Background()
 
 	model, err := gemini.NewModel(ctx, string(ac.Model), &genai.ClientConfig{
@@ -47,22 +44,17 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig, agentsConfig map[stri
 		log.Fatalf("Failed to create model: %v", err)
 	}
 
+	outputKey := ""
+	if ac.OutputKey != nil {
+		outputKey = *ac.OutputKey
+	}
+
 	var currentAgent agent.Agent
 
 	switch ac.Workflow {
 	case "sequential":
 		log.Println("building sequential agent")
-		agents := []agent.Agent{}
-
-		for agentName := range ac.SubAgents {
-			agentConfig := agentsConfig[agentName]
-			if agentConfig.agent == nil {
-				agentConfig.GenerateAgent(agentsConfig)
-			}
-			if agentConfig.agent != nil {
-				agents = append(agents, *agentConfig.agent)
-			}
-		}
+		agents := ac.SubAgents.BuildAgents(agentsConfig)
 
 		currentAgent, err = sequentialagent.New(sequentialagent.Config{
 			AgentConfig: agent.Config{
@@ -72,13 +64,30 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig, agentsConfig map[stri
 			},
 		})
 	case "parallel":
+		log.Println("building parallel agent")
+		agents := ac.SubAgents.BuildAgents(agentsConfig)
+
+		currentAgent, err = parallelagent.New(parallelagent.Config{
+			AgentConfig: agent.Config{
+				Name:        string(ac.Name),
+				Description: string(ac.Description),
+				SubAgents:   agents,
+			},
+		})
 	default:
-		tools := ac.Tools.GenerateAgentTools(ad)
+		var tools []tool.Tool
+		if len(toolAgents) > 0 {
+			tools = ac.Tools.GenerateAgentTools(toolAgents)
+		} else {
+			tools = ac.Tools.GenerateFunctionTools()
+		}
+
 		currentAgent, err = llmagent.New(llmagent.Config{
 			Name:        string(ac.Name),
 			Model:       model,
 			Description: string(ac.Description),
 			Instruction: string(ac.Instruction),
+			OutputKey:   outputKey,
 			Tools:       tools,
 		})
 	}
@@ -88,14 +97,7 @@ func (ac *AgentConfig) GenerateRootAgent(ad []AgentConfig, agentsConfig map[stri
 	}
 
 	ac.agent = &currentAgent
-
-	// If arguments are provided, use full launcher. Otherwise, use cli
-	if ac.Arguments != "" {
-		ac.webLauncher(ctx)
-	} else {
-		ac.inlineLauncher(ctx)
-
-	}
+	log.Println("New", ac.Name, "agent was created")
 
 }
 
@@ -123,88 +125,5 @@ func (ac *AgentConfig) inlineLauncher(ctx context.Context) {
 	if err := l.Execute(ctx, config, make([]string, 0)); err != nil {
 		log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
 	}
-
-}
-
-func (ac *AgentConfig) GenerateAgent(agentsConfig map[string]AgentConfig) {
-	ctx := context.Background()
-
-	model, err := gemini.NewModel(ctx, string(ac.Model), &genai.ClientConfig{
-		APIKey: string(ac.ApiKey),
-	})
-
-	if err != nil {
-		log.Fatalf("Failed to create model: %v", err)
-	}
-
-	outputKey := ""
-	if ac.OutputKey != nil {
-		outputKey = *ac.OutputKey
-	}
-
-	var currentAgent agent.Agent
-
-	switch ac.Workflow {
-	case "sequential":
-		log.Println("building sequential agent")
-		agents := []agent.Agent{}
-
-		for agentName := range ac.SubAgents {
-			agentConfig := agentsConfig[agentName]
-			if agentConfig.agent == nil {
-				agentConfig.GenerateAgent(agentsConfig)
-			}
-			if agentConfig.agent != nil {
-				agents = append(agents, *agentConfig.agent)
-			}
-		}
-
-		currentAgent, err = sequentialagent.New(sequentialagent.Config{
-			AgentConfig: agent.Config{
-				Name:        string(ac.Name),
-				Description: string(ac.Description),
-				SubAgents:   agents,
-			},
-		})
-	case "parallel":
-		log.Println("building parallel agent")
-		agents := []agent.Agent{}
-
-		for agentName := range ac.SubAgents {
-			agentConfig := agentsConfig[agentName]
-			if agentConfig.agent == nil {
-				agentConfig.GenerateAgent(agentsConfig)
-			}
-			if agentConfig.agent != nil {
-				agents = append(agents, *agentConfig.agent)
-			}
-		}
-
-		currentAgent, err = parallelagent.New(parallelagent.Config{
-			AgentConfig: agent.Config{
-				Name:        string(ac.Name),
-				Description: string(ac.Description),
-				SubAgents:   agents,
-			},
-		})
-	default:
-		tools := ac.Tools.GenerateFunctionTools()
-
-		currentAgent, err = llmagent.New(llmagent.Config{
-			Name:        string(ac.Name),
-			Model:       model,
-			Description: string(ac.Description),
-			Instruction: string(ac.Instruction),
-			OutputKey:   outputKey,
-			Tools:       tools,
-		})
-	}
-
-	if err != nil {
-		log.Fatalf("Failed to create agent: %v", err)
-	}
-
-	ac.agent = &currentAgent
-	log.Println(`New ` + ac.Name + ` agent was created`)
 
 }

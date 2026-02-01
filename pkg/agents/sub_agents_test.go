@@ -55,7 +55,8 @@ func TestSubAgents_UnmarshalYAML(t *testing.T) {
 
 			for _, name := range tt.want {
 				assert.Contains(t, config.SubAgents, name)
-				assert.NotNil(t, config.SubAgents[name])
+				// Agents are nil until BuildAgents() is called (see sub_agents.go:18)
+				assert.Nil(t, config.SubAgents[name])
 			}
 		})
 	}
@@ -138,6 +139,7 @@ func TestSubAgents_RoundTrip(t *testing.T) {
 	assert.Equal(t, len(original.SubAgents), len(result.SubAgents))
 	for name := range original.SubAgents {
 		assert.Contains(t, result.SubAgents, name)
-		assert.NotNil(t, result.SubAgents[name])
+		// Agents are nil until BuildAgents() is called (see sub_agents.go:18)
+		assert.Nil(t, result.SubAgents[name])
 	}
 }
