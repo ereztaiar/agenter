@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for git commands
 
     - name: Set up Go
       uses: actions/setup-go@v4
@@ -22,7 +24,22 @@ jobs:
         go-version: '1.24'
 
     - name: Build
-      run: go build -v ./...
+      run: |
+        VERSION=$(git describe --tags --always --dirty)
+        COMMIT=$(git rev-parse --short HEAD)
+        BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        
+        go build -v -ldflags "\
+          -X github.com/ereztaiar/agenter/pkg/version.Version=${VERSION} \
+          -X github.com/ereztaiar/agenter/pkg/version.GitCommit=${COMMIT} \
+          -X github.com/ereztaiar/agenter/pkg/version.BuildDate=${BUILD_DATE}" \
+          -o agenter ./cmd/cli/main.go
 
     - name: Test
       run: go test -v ./...
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: agenter
+        path: agenter
