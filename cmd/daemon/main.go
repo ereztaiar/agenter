@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/ereztaiar/agenter/pkg/version"
+)
 
 func main() {
-	fmt.Println("😈 daemon not yet implomented! 🚧")
+	fmt.Println("😈 daemon not yet implomented! 🚧", version.Version)
 }
