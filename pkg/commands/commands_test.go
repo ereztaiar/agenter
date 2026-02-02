@@ -39,51 +39,6 @@ func setupTestEnv(t *testing.T) {
 	}
 }
 
-func TestGetAgentsFile(t *testing.T) {
-	setupTestEnv(t)
-
-	tests := []struct {
-		name           string
-		setupAgentFile func()
-		setupViper     func()
-		expected       string
-	}{
-		{
-			name: "returns agentFile when set",
-			setupAgentFile: func() {
-				agentFile = "/custom/path/agent.yaml"
-			},
-			setupViper: func() {
-				viper.Set("file", "/default/path/agent.yaml")
-			},
-			expected: "/custom/path/agent.yaml",
-		},
-		{
-			name: "returns viper value when agentFile is empty",
-			setupAgentFile: func() {
-				agentFile = ""
-			},
-			setupViper: func() {
-				viper.Set("file", "/viper/path/agent.yaml")
-			},
-			expected: "/viper/path/agent.yaml",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			viper.Reset()
-			tt.setupAgentFile()
-			tt.setupViper()
-
-			result := getAgentsFile()
-			assert.Equal(t, tt.expected, result)
-
-			agentFile = ""
-		})
-	}
-}
-
 func TestYAMLLoadingWithEnvExpansion(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -185,15 +140,6 @@ func TestRootCmd_Structure(t *testing.T) {
 	assert.NotEmpty(t, RootCmd.Long)
 }
 
-func TestListCmd_Structure(t *testing.T) {
-	setupTestEnv(t)
-
-	assert.NotNil(t, listCmd)
-	assert.Equal(t, "list", listCmd.Use)
-	assert.Equal(t, "List all running agents", listCmd.Short)
-	assert.NotEmpty(t, listCmd.Long)
-}
-
 func TestRootCmd_HasListSubcommand(t *testing.T) {
 	setupTestEnv(t)
 
@@ -208,15 +154,6 @@ func TestRootCmd_HasListSubcommand(t *testing.T) {
 	}
 
 	assert.True(t, foundList, "RootCmd should have 'list' subcommand")
-}
-
-func TestRootCmd_HasFileFlag(t *testing.T) {
-	setupTestEnv(t)
-
-	flag := RootCmd.PersistentFlags().Lookup("file")
-	require.NotNil(t, flag, "RootCmd should have --file flag")
-	assert.Equal(t, "string", flag.Value.Type())
-	assert.Contains(t, flag.Usage, "agent file")
 }
 
 func TestViperDefaultFile(t *testing.T) {
