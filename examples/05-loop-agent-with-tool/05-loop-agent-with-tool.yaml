@@ -48,14 +48,13 @@ agents:
     api-key: ${GOOGLE_API_KEY}
     tools:
       functions:
-        - python: >
-            def exit_loop():
-              """Call this function ONLY when the critique is 'APPROVED', indicating the story is finished and no more changes are needed."""
-              return {"status": "approved", "message": "Story approved. Exiting refinement loop."}
+        - /home/ereztaiar/go-workdir/agenter/exit_loop.py
+          
     output_key: "current_story"
 
   story_refinement_loop:
     type: "loop"
+    workflow: "loop"
     name: "StoryRefinementLoop"
     model: "gemini-2.5-flash-lite"
     description: "agents that will run repeatedly: Critic -> Refiner"

@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/adk/agent"
 	"google.golang.org/adk/agent/llmagent"
+	"google.golang.org/adk/agent/workflowagents/loopagent"
 	"google.golang.org/adk/agent/workflowagents/parallelagent"
 	"google.golang.org/adk/agent/workflowagents/sequentialagent"
 	"google.golang.org/adk/cmd/launcher"
@@ -17,20 +18,21 @@ import (
 )
 
 type AgentConfig struct {
-	Type        AgentType   `yaml:"type"`
-	DependsOn   DependsOn   `yaml:"depends_on,omitempty"`
-	Name        Name        `yaml:"name"`
-	Model       Model       `yaml:"model"`
-	Workflow    Workflow    `yaml:"workflow,omitempty"`
-	Description Description `yaml:"description"`
-	Instruction Instruction `yaml:"instruction"`
-	ApiKey      ApiKey      `yaml:"api-key"`
-	Arguments   Arguments   `yaml:"arguments,omitempty"`
-	Tools       Tools       `yaml:"tools,omitempty"`
-	OutputKey   OutputKey   `yaml:"output_key,omitempty"`
-	SubAgents   SubAgents   `yaml:"sub_agents,omitempty"`
-	Memory      []string    `yaml:"memory,omitempty"`
-	agent       *agent.Agent
+	Type          AgentType     `yaml:"type"`
+	DependsOn     DependsOn     `yaml:"depends_on,omitempty"`
+	Name          Name          `yaml:"name"`
+	Model         Model         `yaml:"model"`
+	Workflow      Workflow      `yaml:"workflow,omitempty"`
+	Description   Description   `yaml:"description"`
+	Instruction   Instruction   `yaml:"instruction"`
+	ApiKey        ApiKey        `yaml:"api-key"`
+	Arguments     Arguments     `yaml:"arguments,omitempty"`
+	Tools         Tools         `yaml:"tools,omitempty"`
+	OutputKey     OutputKey     `yaml:"output_key,omitempty"`
+	MaxIterations MaxIterations `yaml:"max_iterations,omitempty"`
+	SubAgents     SubAgents     `yaml:"sub_agents,omitempty"`
+	Memory        []string      `yaml:"memory,omitempty"`
+	agent         *agent.Agent
 }
 
 func (ac *AgentConfig) GenerateAgent(agentsConfig map[string]AgentConfig, toolAgents []AgentConfig) {
@@ -73,6 +75,18 @@ func (ac *AgentConfig) GenerateAgent(agentsConfig map[string]AgentConfig, toolAg
 				Description: string(ac.Description),
 				SubAgents:   agents,
 			},
+		})
+	case "loop":
+		log.Println("building loop agent")
+		agents := ac.SubAgents.BuildAgents(agentsConfig)
+
+		currentAgent, err = loopagent.New(loopagent.Config{
+			AgentConfig: agent.Config{
+				Name:        string(ac.Name),
+				Description: string(ac.Description),
+				SubAgents:   agents,
+			},
+			MaxIterations: uint(ac.MaxIterations),
 		})
 	default:
 		var tools []tool.Tool

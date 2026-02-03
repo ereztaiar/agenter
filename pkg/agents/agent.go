@@ -13,3 +13,4 @@ type Instruction string
 type ApiKey string
 type Arguments string
 type OutputKey *string
+type MaxIterations uint

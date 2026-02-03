@@ -1,9 +1,15 @@
 package agent
 
 import (
+	"log"
+
 	"google.golang.org/adk/tool"
 	"google.golang.org/adk/tool/agenttool"
+	"google.golang.org/adk/tool/functiontool"
 	"google.golang.org/adk/tool/geminitool"
+	"os/exec"
+	"path/filepath"
+	"strings"
 )
 
 type Tools struct {
@@ -40,8 +46,27 @@ func (t *Tools) GenerateFunctionTools() []tool.Tool {
 		case "GoogleSearch":
 			functionTool = geminitool.GoogleSearch{}
 		default:
-			// Skip unknown function tools
-			continue
+
+			executeFn := func(ctx tool.Context, args []string) (string, error) {
+				log.Println("executing python code")
+				cmd := exec.Command("python3", append([]string{functionName}, args...)...)
+				output, err := cmd.Output()
+				if err != nil {
+					return "", err
+				}
+				return string(output), nil
+			}
+			var err error
+			functionTool, err = functiontool.New(
+				functiontool.Config{
+					Name:        strings.TrimSuffix(filepath.Base(functionName), filepath.Ext(functionName)),
+					Description: "Creates a new support ticket with a specified urgency level.",
+				},
+				executeFn,
+			)
+			if err != nil {
+				log.Fatalln("failed to create long running tool: %w", err)
+			}
 		}
 
 		tools = append(tools, functionTool)
