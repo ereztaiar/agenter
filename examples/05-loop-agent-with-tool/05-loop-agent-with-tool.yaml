@@ -48,7 +48,7 @@ agents:
     api-key: ${GOOGLE_API_KEY}
     tools:
       functions:
-        - /home/ereztaiar/go-workdir/agenter/exit_loop.py
+        - ${EXAMPLES_DIRECTORY}/05-loop-agent-with-tool/exit_loop.py
           
     output_key: "current_story"
 

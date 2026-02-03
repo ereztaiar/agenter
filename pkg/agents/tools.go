@@ -1,12 +1,12 @@
 package agent
 
 import (
-	"log"
-
+	"fmt"
 	"google.golang.org/adk/tool"
 	"google.golang.org/adk/tool/agenttool"
 	"google.golang.org/adk/tool/functiontool"
 	"google.golang.org/adk/tool/geminitool"
+	"log"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -47,7 +47,7 @@ func (t *Tools) GenerateFunctionTools() []tool.Tool {
 			functionTool = geminitool.GoogleSearch{}
 		default:
 
-			executeFn := func(ctx tool.Context, args []string) (string, error) {
+			executeFnAsync := func(ctx tool.Context, args []string) (string, error) {
 				log.Println("executing python code")
 				cmd := exec.Command("python3", append([]string{functionName}, args...)...)
 				output, err := cmd.Output()
@@ -57,12 +57,13 @@ func (t *Tools) GenerateFunctionTools() []tool.Tool {
 				return string(output), nil
 			}
 			var err error
+			toolName := strings.TrimSuffix(filepath.Base(functionName), filepath.Ext(functionName))
 			functionTool, err = functiontool.New(
 				functiontool.Config{
-					Name:        strings.TrimSuffix(filepath.Base(functionName), filepath.Ext(functionName)),
-					Description: "Creates a new support ticket with a specified urgency level.",
+					Name:        toolName,
+					Description: fmt.Sprintf("runs {{%s}} python method.", toolName),
 				},
-				executeFn,
+				executeFnAsync,
 			)
 			if err != nil {
 				log.Fatalln("failed to create long running tool: %w", err)
