@@ -26,6 +26,7 @@ func init() {
 			"agent.yaml",
 			"agent file to run")
 	RootCmd.AddCommand(runAgents)
+	RootCmd.AddCommand(secrets)
 }
 
 var RootCmd = &cobra.Command{
