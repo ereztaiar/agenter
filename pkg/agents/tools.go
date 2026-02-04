@@ -1,15 +1,17 @@
 package agent
 
 import (
+	"encoding/json"
 	"fmt"
-	"google.golang.org/adk/tool"
-	"google.golang.org/adk/tool/agenttool"
-	"google.golang.org/adk/tool/functiontool"
-	"google.golang.org/adk/tool/geminitool"
 	"log"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"google.golang.org/adk/tool"
+	"google.golang.org/adk/tool/agenttool"
+	"google.golang.org/adk/tool/functiontool"
+	"google.golang.org/adk/tool/geminitool"
 )
 
 type Tools struct {
@@ -50,17 +52,23 @@ func (t *Tools) GenerateFunctionTools() []tool.Tool {
 			type tmpArgs struct{}
 
 			type tmpResults struct {
-				Symbol string `json:"symbol"`
+				Status  string `json:"status"`
+				Message string `json:"message"`
 			}
 
 			executeFnAsync := func(ctx tool.Context, input tmpArgs) (tmpResults, error) {
 				log.Println("executing python code")
 				cmd := exec.Command("python3", append([]string{functionName}, "")...) //tmpArgs...)...)
 				output, err := cmd.Output()
+				var response tmpResults
 				if err != nil {
-					return tmpResults{string("")}, err
+					return tmpResults{}, err
 				}
-				return tmpResults{string(output)}, nil
+				err = json.Unmarshal(output, &response)
+				if err != nil {
+					return tmpResults{}, err
+				}
+				return response, nil
 			}
 			var err error
 			toolName := strings.TrimSuffix(filepath.Base(functionName), filepath.Ext(functionName))
