@@ -47,21 +47,27 @@ func (t *Tools) GenerateFunctionTools() []tool.Tool {
 			functionTool = geminitool.GoogleSearch{}
 		default:
 
-			executeFnAsync := func(ctx tool.Context, args []string) (string, error) {
+			type tmpArgs struct{}
+
+			type tmpResults struct {
+				Symbol string `json:"symbol"`
+			}
+
+			executeFnAsync := func(ctx tool.Context, input tmpArgs) (tmpResults, error) {
 				log.Println("executing python code")
-				cmd := exec.Command("python3", append([]string{functionName}, args...)...)
+				cmd := exec.Command("python3", append([]string{functionName}, "")...) //tmpArgs...)...)
 				output, err := cmd.Output()
 				if err != nil {
-					return "", err
+					return tmpResults{string("")}, err
 				}
-				return string(output), nil
+				return tmpResults{string(output)}, nil
 			}
 			var err error
 			toolName := strings.TrimSuffix(filepath.Base(functionName), filepath.Ext(functionName))
 			functionTool, err = functiontool.New(
 				functiontool.Config{
 					Name:        toolName,
-					Description: fmt.Sprintf("runs {{%s}} python method.", toolName),
+					Description: fmt.Sprintf("runs %s python method.", toolName),
 				},
 				executeFnAsync,
 			)

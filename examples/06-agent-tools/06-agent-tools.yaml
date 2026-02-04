@@ -9,8 +9,8 @@ agents:
       You are a smart currency conversion assistant.
 
       For currency conversion requests:
-      1. Use `get_fee_for_payment_method()` to find transaction fees
-      2. Use `get_exchange_rate()` to get currency conversion rates
+      1. Use `get_fee_for_payment_method` to find transaction fees
+      2. Use `get_exchange_rate` to get currency conversion rates
       3. Check the "status" field in each tool's response for errors
       4. Calculate the final amount after fees based on the output from `get_fee_for_payment_method` and `get_exchange_rate` methods and provide a clear breakdown.
       5. First, state the final converted amount.
