@@ -75,10 +75,10 @@ agents:
 
 ```bash
 # Run with default agent.yaml file
-./agenter
+./agenter run
 
 # Run with specific configuration file
-./agenter --file agent.yaml
+./agenter run --file agent.yaml
 ```
 
 The agent will start a web server (if configured) and be ready to accept requests.
@@ -309,7 +309,7 @@ go test -v ./...
 ./agenter
 
 # Use specific configuration file
-./agenter --file agent.second.yaml
+./agenter run --file agent.second.yaml
 
 # List agents (not yet implemented)
 ./agenter list
