@@ -1,5 +1,6 @@
 # Agenter
 
+ ![Agenter Logo](assets/agenter_logo.png)
 A Go-based AI agent orchestrator that uses Google's Agent Development Kit (ADK) to build and run multi-agent systems. Agenter enables you to define complex AI workflows using simple YAML configuration files, where agents can be composed into sequential pipelines, parallel executions, or LLM-driven orchestrations.
 
 ## Features
