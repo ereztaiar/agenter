@@ -97,12 +97,12 @@ description: "Agent with tools"
 instruction: "Use tools"
 api-key: "test-api-key"
 tools:
-  functions:
+  predefined_functions:
     - GoogleSearch
 `,
 			wantErr: false,
 			check: func(t *testing.T, config agent.AgentConfig) {
-				assert.Equal(t, agent.Functions{"GoogleSearch"}, config.Tools.Functions)
+				assert.Equal(t, agent.PredefinedFunctions{"GoogleSearch"}, config.Tools.PredefinedFunctions)
 			},
 		},
 		{
@@ -251,7 +251,7 @@ func TestAgentConfig_RoundTrip(t *testing.T) {
 		ApiKey:      "test-api-key",
 		OutputKey:   &outputKey,
 		Tools: agent.Tools{
-			Functions: agent.Functions{"GoogleSearch"},
+			PredefinedFunctions: agent.PredefinedFunctions{"GoogleSearch"},
 		},
 		Memory: []string{"memory1"},
 	}
@@ -271,7 +271,7 @@ func TestAgentConfig_RoundTrip(t *testing.T) {
 	assert.Equal(t, original.ApiKey, result.ApiKey)
 	require.NotNil(t, result.OutputKey)
 	assert.Equal(t, *original.OutputKey, *result.OutputKey)
-	assert.Equal(t, original.Tools.Functions, result.Tools.Functions)
+	assert.Equal(t, original.Tools.PredefinedFunctions, result.Tools.PredefinedFunctions)
 	assert.Equal(t, original.Memory, result.Memory)
 }
 
@@ -290,7 +290,7 @@ tools:
     - researcher
     - writer
     - editor
-  functions:
+  predefined_functions:
     - GoogleSearch
 sub_agents:
   - sub1
@@ -317,8 +317,8 @@ depends_on: "prerequisite_agent"
 	assert.Contains(t, config.Tools.Agents, "writer")
 	assert.Contains(t, config.Tools.Agents, "editor")
 
-	assert.Len(t, config.Tools.Functions, 1)
-	assert.Contains(t, config.Tools.Functions, "GoogleSearch")
+	assert.Len(t, config.Tools.PredefinedFunctions, 1)
+	assert.Contains(t, config.Tools.PredefinedFunctions, "GoogleSearch")
 
 	assert.Len(t, config.SubAgents, 2)
 	assert.Contains(t, config.SubAgents, "sub1")

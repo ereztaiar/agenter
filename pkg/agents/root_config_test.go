@@ -179,7 +179,7 @@ agents:
       agents:
         - agent1
         - agent2
-      functions:
+      predefined_functions:
         - GoogleSearch
 `,
 			wantErr: false,
@@ -187,7 +187,7 @@ agents:
 				assert.Len(t, config.AgentsConfig, 1)
 				agentConfig := config.AgentsConfig["root1"]
 				assert.Equal(t, agent.Agents{"agent1", "agent2"}, agentConfig.Tools.Agents)
-				assert.Equal(t, agent.Functions{"GoogleSearch"}, agentConfig.Tools.Functions)
+				assert.Equal(t, agent.PredefinedFunctions{"GoogleSearch"}, agentConfig.Tools.PredefinedFunctions)
 			},
 		},
 		{
@@ -308,7 +308,7 @@ func TestRootConfig_RoundTrip(t *testing.T) {
 				ApiKey:      "test-key",
 				OutputKey:   &outputKey,
 				Tools: agent.Tools{
-					Functions: agent.Functions{"GoogleSearch"},
+					PredefinedFunctions: agent.PredefinedFunctions{"GoogleSearch"},
 				},
 			},
 		},
@@ -332,7 +332,7 @@ func TestRootConfig_RoundTrip(t *testing.T) {
 	assert.Equal(t, agent.Name("Agent1"), agent1.Name)
 	require.NotNil(t, agent1.OutputKey)
 	assert.Equal(t, "test_output", *agent1.OutputKey)
-	assert.Equal(t, agent.Functions{"GoogleSearch"}, agent1.Tools.Functions)
+	assert.Equal(t, agent.PredefinedFunctions{"GoogleSearch"}, agent1.Tools.PredefinedFunctions)
 
 	assert.Len(t, result.MemoryConfig, 1)
 	assert.Equal(t, "InMemoryRunner", result.MemoryConfig["memory1"])

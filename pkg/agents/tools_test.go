@@ -24,18 +24,18 @@ func TestTools_UnmarshalYAML(t *testing.T) {
     - agent2`,
 			want: agent.Tools{
 				Agents:    agent.Agents{"agent1", "agent2"},
-				Functions: nil,
+				PredefinedFunctions: nil,
 			},
 			wantErr: false,
 		},
 		{
 			name: "unmarshal tools with functions only",
 			yaml: `tools:
-  functions:
+  predefined_functions:
     - GoogleSearch`,
 			want: agent.Tools{
 				Agents:    nil,
-				Functions: agent.Functions{"GoogleSearch"},
+				PredefinedFunctions: agent.PredefinedFunctions{"GoogleSearch"},
 			},
 			wantErr: false,
 		},
@@ -44,11 +44,11 @@ func TestTools_UnmarshalYAML(t *testing.T) {
 			yaml: `tools:
   agents:
     - agent1
-  functions:
+  predefined_functions:
     - GoogleSearch`,
 			want: agent.Tools{
 				Agents:    agent.Agents{"agent1"},
-				Functions: agent.Functions{"GoogleSearch"},
+				PredefinedFunctions: agent.PredefinedFunctions{"GoogleSearch"},
 			},
 			wantErr: false,
 		},
@@ -57,7 +57,7 @@ func TestTools_UnmarshalYAML(t *testing.T) {
 			yaml: `tools: {}`,
 			want: agent.Tools{
 				Agents:    nil,
-				Functions: nil,
+				PredefinedFunctions: nil,
 			},
 			wantErr: false,
 		},
@@ -77,7 +77,7 @@ func TestTools_UnmarshalYAML(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.want.Agents, config.Tools.Agents)
-			assert.Equal(t, tt.want.Functions, config.Tools.Functions)
+			assert.Equal(t, tt.want.PredefinedFunctions, config.Tools.PredefinedFunctions)
 		})
 	}
 }
@@ -91,28 +91,28 @@ func TestTools_MarshalYAML(t *testing.T) {
 			name: "marshal tools with agents and functions",
 			tools: agent.Tools{
 				Agents:    agent.Agents{"agent1", "agent2"},
-				Functions: agent.Functions{"GoogleSearch"},
+				PredefinedFunctions: agent.PredefinedFunctions{"GoogleSearch"},
 			},
 		},
 		{
 			name: "marshal tools with agents only",
 			tools: agent.Tools{
 				Agents:    agent.Agents{"agent1"},
-				Functions: nil,
+				PredefinedFunctions: nil,
 			},
 		},
 		{
 			name: "marshal tools with functions only",
 			tools: agent.Tools{
 				Agents:    nil,
-				Functions: agent.Functions{"GoogleSearch"},
+				PredefinedFunctions: agent.PredefinedFunctions{"GoogleSearch"},
 			},
 		},
 		{
 			name: "marshal empty tools",
 			tools: agent.Tools{
 				Agents:    nil,
-				Functions: nil,
+				PredefinedFunctions: nil,
 			},
 		},
 	}
@@ -135,7 +135,7 @@ func TestTools_MarshalYAML(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, tt.tools.Agents, result.Tools.Agents)
-			assert.Equal(t, tt.tools.Functions, result.Tools.Functions)
+			assert.Equal(t, tt.tools.PredefinedFunctions, result.Tools.PredefinedFunctions)
 		})
 	}
 }
@@ -143,7 +143,7 @@ func TestTools_MarshalYAML(t *testing.T) {
 func TestTools_RoundTrip(t *testing.T) {
 	original := agent.Tools{
 		Agents:    agent.Agents{"agent1", "agent2", "agent3"},
-		Functions: agent.Functions{"GoogleSearch", "CustomFunction"},
+		PredefinedFunctions: agent.PredefinedFunctions{"GoogleSearch", "CustomFunction"},
 	}
 
 	config := struct {
@@ -162,5 +162,5 @@ func TestTools_RoundTrip(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, original.Agents, result.Tools.Agents)
-	assert.Equal(t, original.Functions, result.Tools.Functions)
+	assert.Equal(t, original.PredefinedFunctions, result.Tools.PredefinedFunctions)
 }

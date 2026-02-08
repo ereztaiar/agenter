@@ -228,7 +228,7 @@ func TestYAMLWithComplexTools(t *testing.T) {
       agents:
         - agent1
         - agent2
-      functions:
+      predefined_functions:
         - GoogleSearch
   agent1:
     type: "agent"
@@ -260,8 +260,8 @@ func TestYAMLWithComplexTools(t *testing.T) {
 	assert.Len(t, rootAgent.Tools.Agents, 2)
 	assert.Contains(t, rootAgent.Tools.Agents, "agent1")
 	assert.Contains(t, rootAgent.Tools.Agents, "agent2")
-	assert.Len(t, rootAgent.Tools.Functions, 1)
-	assert.Contains(t, rootAgent.Tools.Functions, "GoogleSearch")
+	assert.Len(t, rootAgent.Tools.PredefinedFunctions, 1)
+	assert.Contains(t, rootAgent.Tools.PredefinedFunctions, "GoogleSearch")
 
 	agent1 := config.AgentsConfig["agent1"]
 	require.NotNil(t, agent1.OutputKey)

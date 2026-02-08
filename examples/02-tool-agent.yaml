@@ -11,7 +11,7 @@ agents:
 
     api-key: ${GOOGLE_API_KEY}
     tools:
-      functions:
+      predefined_functions:
         - GoogleSearch
     output_key: "research_findings"
 
