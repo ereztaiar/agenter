@@ -33,5 +33,5 @@ def get_fee_for_payment_method(method: str) -> dict:
             "error_message": f"Payment method '{method}' not found",
         }
 
-if __name__ != "__main__":
+if __name__ == "__main__":
     print(json.dumps(get_fee_for_payment_method(sys.argv[1])))

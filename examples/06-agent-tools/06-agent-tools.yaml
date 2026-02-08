@@ -21,6 +21,17 @@ agents:
 
     api-key: ${GOOGLE_API_KEY}
     tools:
-      functions:
-        - ${EXAMPLES_DIRECTORY}/06-agent-tools/get_fee_for_payment_method.py
-        - ${EXAMPLES_DIRECTORY}/06-agent-tools/get_exchange_rate.py
+      custom_functions:
+        - name: "get_fee_for_payment_method"
+          path: "${EXAMPLES_DIRECTORY}/06-agent-tools/get_fee_for_payment_method.py"
+          input_args: >
+            "{method: string}"
+          output: >
+            "{status: string, error_message?: string, fee_percentage?: string}"
+
+        - name: "get_exchange_rate"
+          path: "${EXAMPLES_DIRECTORY}/06-agent-tools/get_exchange_rate.py"
+          input_args: >
+            "{base_currency: string, target_currency: string}"
+          output: >
+            "{status: string, error_message?: string, rate?: string}"

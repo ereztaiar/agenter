@@ -40,5 +40,5 @@ def get_exchange_rate(base_currency: str, target_currency: str) -> str:
             "error_message": f"Unsupported currency pair: {base_currency}/{target_currency}",
         }
         
-if __name__ != "__main__":
+if __name__ == "__main__":
     print(json.dumps(get_exchange_rate(sys.argv[1], sys.argv[2])))

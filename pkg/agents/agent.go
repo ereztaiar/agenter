@@ -1,7 +1,7 @@
 package agent
 
 type Agents []string
-type Functions []string
+
 
 type AgentType string
 type DependsOn string

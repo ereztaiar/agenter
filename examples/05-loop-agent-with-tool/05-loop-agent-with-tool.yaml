@@ -47,9 +47,14 @@ agents:
 
     api-key: ${GOOGLE_API_KEY}
     tools:
-      functions:
-        - ${EXAMPLES_DIRECTORY}/05-loop-agent-with-tool/exit_loop.py
-          
+      custom_functions:
+        -
+          name: "exit_loop"
+          path: "${EXAMPLES_DIRECTORY}/05-loop-agent-with-tool/exit_loop.py"
+          input_args: ""
+          output: >
+            "{status: string, message: string}"
+
     output_key: "current_story"
 
   story_refinement_loop:
